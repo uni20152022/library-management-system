@@ -14,7 +14,7 @@ export const requests = {
             cache: 'no-cache',
             headers: {
                 ...authorizationHeader,
-            },
+            } as HeadersInit,
             method: 'GET',
             mode: 'cors',
             referrerPolicy: 'origin',
@@ -35,7 +35,7 @@ export const requests = {
             headers: {
                 ...authorizationHeader,
                 'Content-Type': 'application/json',
-            },
+            } as HeadersInit,
             method: 'POST',
             mode: 'cors',
             referrerPolicy: 'origin',
