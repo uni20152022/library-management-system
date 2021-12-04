@@ -13,8 +13,9 @@ import {
 import { AssignmentInd, Book, Home, Logout, Menu, Search } from '@mui/icons-material';
 
 import { useUser } from '@hooks';
-import { AddNewBook, BookFormModal, BooksTable } from '@components';
+import { AddNewBook, BooksTable } from '@components';
 import { BookModel } from '@models';
+import { requests } from '@backend';
 
 const Admin: NextPage = () => {
     const router = useRouter()
@@ -24,6 +25,15 @@ const Admin: NextPage = () => {
             // router.push('/auth');
         }
     }, [user, loading])
+
+    const [books, setBooks] = useState<Array<BookModel>>([]);
+
+    useEffect(() => {
+        requests.get('/books/all')
+            .then((response) => {
+                console.log(response);
+            }).catch(e => console.log(e))
+    }, [])
 
     // TODO get request from the server
     const rows = Array<BookModel>(

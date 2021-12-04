@@ -6,6 +6,7 @@ export const requests = {
     get: function get(resource: string) {
         // eslint-disable-next-line react-hooks/rules-of-hooks
         const { token } = useUser();
+        console.log(token);
         const authorizationHeader =
             token ? {
                 'Authorization': token || '',

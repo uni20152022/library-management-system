@@ -21,7 +21,7 @@ const Auth: NextPage = () => {
             password
         }).then((response) => {
             console.log(response);
-            // setUser({ username: login, token: response['api-token'], role: response['role'] }
+            setUser({ username: login, token: response['api-token'], role: 'admin' })
             const userRole = 'admin'; // TODO remove this bs
             router.push(`/dashboard/${userRole}`);
         }).catch((e) => console.log(e));
