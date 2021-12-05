@@ -1,30 +1,32 @@
-import { useState } from 'react';
+import { FunctionComponent, memo, useCallback, useState } from "react";
 
-import { Button } from '@mui/material';
-import { BookFormModal } from './BookFormModal';
+import { Button } from "@mui/material";
 
-export const AddNewBook = () => {
-    const [openModal, setOpenModal] = useState(false);
+import { BookFormModal } from "@components";
 
-    return (
-        <>
-            <Button
-                type="button"
-                color="primary"
-                size="medium"
-                variant="contained"
-                disableRipple
-                disableElevation
-                sx={{ mt: 1, mb: 1 }}
-                onClick={() => setOpenModal(true)}
-            >
-                Add new book
-            </Button>
-            <BookFormModal
-                isOpen={openModal}
-                onClose={() => setOpenModal(false)}
-                isNew={true}
-            />
-        </>
-    )
-}
+const AddNewBookFC: FunctionComponent = () => {
+  const [openModal, setOpenModal] = useState(false);
+
+  const handleClick = useCallback(() => setOpenModal(true), []);
+  const handleClose = useCallback(() => setOpenModal(false), []);
+
+  return (
+    <>
+      <Button
+        type="button"
+        color="primary"
+        size="medium"
+        variant="contained"
+        disableRipple
+        disableElevation
+        sx={{ mt: 1, mb: 1 }}
+        onClick={handleClick}
+      >
+        Add new book
+      </Button>
+      <BookFormModal isOpen={openModal} onClose={handleClose} isNew={true} />
+    </>
+  );
+};
+
+export const AddNewBook = memo(AddNewBookFC);

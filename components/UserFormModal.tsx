@@ -8,64 +8,63 @@ import {
   FormLabel,
   Input,
   InputLabel,
-  MenuItem,
   Modal,
-  Select,
   Typography,
 } from "@mui/material";
-import { BookModel } from "@models";
 
-const formControlLabels: Array<keyof BookModel> = [
-  "title",
-  "isbn",
-  "author",
-  "description",
-  "copy_number",
+import { UserModel } from "@models";
+
+const formControlLabels: Array<keyof UserModel> = [
+  "login",
+  "created_date",
+  "updated_date",
 ];
 
-interface BookFormModal {
-  book: BookModel;
+interface UserFormModal {
+  user: UserModel;
   onClose: () => void;
   isOpen: boolean;
   isNew: boolean;
 }
 
-const BookFormModalFC: FunctionComponent<BookFormModal> = ({
-  book,
+const UserFormModalFC: FunctionComponent<UserFormModal> = ({
+  user,
   onClose,
   isOpen,
   isNew,
-}: BookFormModal) => {
+}: UserFormModal) => {
   const [formInfo, setFormInfo] = useState(
     isNew
       ? ({
           id: "",
-          type: "",
-          title: "",
-          isbn: "",
-          author: "",
-          description: "",
-          copy_number: "",
-        } as BookModel)
+          login: "",
+          password: "",
+          token: "",
+          created_date: "",
+          updated_date: "",
+        } as UserModel)
       : {
-          ...book,
+          ...user,
         }
   );
 
-  const handleChange = (controlLabel: string, controlValue: string) => {
-    setFormInfo((prevState) => ({
-      ...prevState,
-      [controlLabel]: controlValue,
-    }));
-  };
+  const handleChange = useCallback(
+    (controlLabel: keyof UserModel, controlValue: string) => {
+      setFormInfo((prevState) => ({
+        ...prevState,
+        [controlLabel]: controlValue,
+      }));
+    },
+    []
+  );
 
   const handleSubmit = useCallback(() => {
-    // TODO update or add this book
+    // TODO update or add this user
     onClose();
   }, [onClose]);
 
   const handleDelete = useCallback(() => {
-    // TODO delete this book
+    // TODO delete this user
     onClose();
   }, [onClose]);
 
@@ -73,8 +72,8 @@ const BookFormModalFC: FunctionComponent<BookFormModal> = ({
     <Modal
       open={isOpen}
       onClose={onClose}
-      aria-labelledby="book-form-modal-title"
-      aria-describedby="book-form-modal-description"
+      aria-labelledby="user-form-modal-title"
+      aria-describedby="user-form-modal-description"
     >
       <Box
         sx={{
@@ -92,22 +91,9 @@ const BookFormModalFC: FunctionComponent<BookFormModal> = ({
         <FormGroup>
           <FormLabel sx={{ mb: 2, textAlign: "center" }}>
             <Typography variant="h4">
-              {(isNew ? "Add" : "Update") + " book"}
+              {(isNew ? "Add" : "Update") + " user"}
             </Typography>
           </FormLabel>
-          <FormControl sx={{ mb: 2, mt: 2 }}>
-            <InputLabel id="type-select-label">type</InputLabel>
-            <Select
-              id={`type-input`}
-              value={formInfo.type}
-              labelId="type-select-label"
-              label="type"
-              onChange={(e) => handleChange("type", e.target.value)}
-            >
-              <MenuItem value={"physical"}>physical</MenuItem>
-              <MenuItem value={"digital"}>digital</MenuItem>
-            </Select>
-          </FormControl>
           {formControlLabels.map((controlLabel, index) => (
             <FormControl sx={{ mb: 2, mt: 2 }} key={index}>
               <InputLabel htmlFor={`${controlLabel}-input`}>
@@ -152,10 +138,10 @@ const BookFormModalFC: FunctionComponent<BookFormModal> = ({
   );
 };
 
-export const BookFormModal = memo(
-  BookFormModalFC,
+export const UserFormModal = memo(
+  UserFormModalFC,
   (prevProps, nextProps) =>
-    prevProps.book.id === nextProps.book.id &&
+    prevProps.user.id === nextProps.user.id &&
     prevProps.onClose === nextProps.onClose &&
     prevProps.isOpen === nextProps.isOpen &&
     prevProps.isNew === nextProps.isNew
