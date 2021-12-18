@@ -15,6 +15,9 @@ import {
 import { MoreVert } from "@mui/icons-material";
 
 import { BookModel } from "@models";
+import { requests } from "@backend";
+import { useRouter } from "next/router";
+import { LOCAL_URL } from "@constants";
 
 const randomImages = [
   "https://www.jdandj.com/uploads/8/0/0/8/80083458/book-covers-for-authors-in-the-usa-5_orig.jpg",
@@ -31,21 +34,56 @@ function getRandomImage(id: string): string {
   return randomImages[parseInt(id) % randomImages.length];
 }
 
-const BookCardFC: FunctionComponent<{ book: BookModel }> = ({ book }) => {
+const BookCardFC: FunctionComponent<{
+  book: BookModel;
+  changeBookingStatus: (id: string) => void;
+  changeWishlistStatus: (id: string) => void;
+}> = ({ book, changeBookingStatus, changeWishlistStatus }) => {
+  const router = useRouter();
+
   const [openSnackbarReason, setOpenSnackbarReason] = useState<string | null>(
     null
   );
   const coverImage = useMemo(() => getRandomImage(book.id), []);
 
   const handleBook = useCallback(() => {
-    setOpenSnackbarReason("booked");
-    // TODO book on backend
-  }, []);
+    if (book.booking_details_status) {
+      router.push(LOCAL_URL.client.mybooks);
+    } else {
+      requests
+        .post("/booking-details", {
+          book_id: book.id,
+        })
+        .then((res) => res.json())
+        .then((response: Response) => {
+          if (response.status) {
+            changeBookingStatus(book.id);
+            setOpenSnackbarReason("booked");
+          } else {
+            setOpenSnackbarReason("already booked");
+          }
+        });
+    }
+  }, [book.booking_details_status, book.id, changeBookingStatus, router]);
 
   const handleAddToWishlist = useCallback(() => {
-    setOpenSnackbarReason("added to wishlist");
-    // TODO add to wishlist on backend
-  }, []);
+    if (book.wishlisted) {
+      router.push(LOCAL_URL.client.wishlist);
+    } else {
+      requests
+        .post("/wishlist", {
+          book_id: book.id,
+        })
+        .then((response: Response) => {
+          if (response.status) {
+            changeWishlistStatus(book.id);
+            setOpenSnackbarReason("added to wishlist");
+          } else {
+            setOpenSnackbarReason("is already added to wishlist");
+          }
+        });
+    }
+  }, [book.id, book.wishlisted, changeWishlistStatus, router]);
 
   return (
     <Card>
@@ -84,17 +122,39 @@ const BookCardFC: FunctionComponent<{ book: BookModel }> = ({ book }) => {
           justifyContent: "space-between",
         }}
       >
-        <Button size="small" variant="contained" onClick={handleBook}>
-          Book this book
-        </Button>
-        <Button
-          size="small"
-          variant="outlined"
-          color="secondary"
-          onClick={handleAddToWishlist}
-        >
-          Add to wishlist
-        </Button>
+        {book.booking_details_status ? (
+          <Button
+            size="small"
+            variant="contained"
+            color="success"
+            onClick={handleBook}
+          >
+            Already booked
+          </Button>
+        ) : (
+          <Button size="small" variant="contained" onClick={handleBook}>
+            Book this book
+          </Button>
+        )}
+        {book.wishlisted ? (
+          <Button
+            size="small"
+            variant="outlined"
+            color="warning"
+            onClick={handleAddToWishlist}
+          >
+            Already in your wishlist
+          </Button>
+        ) : (
+          <Button
+            size="small"
+            variant="outlined"
+            color="secondary"
+            onClick={handleAddToWishlist}
+          >
+            Add to wishlist
+          </Button>
+        )}
       </CardActions>
       <Snackbar
         open={Boolean(openSnackbarReason)}
@@ -106,7 +166,7 @@ const BookCardFC: FunctionComponent<{ book: BookModel }> = ({ book }) => {
           severity="success"
           sx={{ width: "100%" }}
         >
-          You successfully {openSnackbarReason} {book.title}
+          You {openSnackbarReason} {book.title}
         </Alert>
       </Snackbar>
     </Card>
@@ -115,5 +175,8 @@ const BookCardFC: FunctionComponent<{ book: BookModel }> = ({ book }) => {
 
 export const BookCard = memo(
   BookCardFC,
-  (prevProps, nextProps) => prevProps.book.id === nextProps.book.id
+  (prevProps, nextProps) =>
+    !!prevProps.book &&
+    !!nextProps.book &&
+    JSON.stringify(prevProps.book) === JSON.stringify(nextProps.book)
 );

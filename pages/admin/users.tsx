@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
+  Button,
   Container,
   IconButton,
   InputAdornment,
   Stack,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import { Search } from "@mui/icons-material";
 
@@ -66,7 +68,60 @@ const Users: NextPage = () => {
           }}
           fullWidth
         />
-        <UsersTable users={users} />
+        <UsersTable
+          users={users}
+          actions={[
+            {
+              name: "status",
+              value: (user: UserModel) => (
+                <Tooltip title="Toggle status" arrow>
+                  <Button
+                    size="small"
+                    variant="text"
+                    color={user.restricted_until ? "error" : "success"}
+                    disableRipple
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      requests
+                        .post(
+                          user.restricted_until
+                            ? `/activate-user`
+                            : `/restrict-user`,
+                          {
+                            user_id: user.id,
+                          }
+                        )
+                        .then((res) => res.json())
+                        .then((response) => {
+                          if (response.status) {
+                            requests
+                              .get(`/users/${user.id}`)
+                              .then((res) => res.json())
+                              .then((response) => {
+                                const changedUser = response.data
+                                  .user as UserModel;
+                                if (response.status) {
+                                  setUsers((prevState) =>
+                                    prevState.map((item) =>
+                                      item.id === changedUser.id
+                                        ? changedUser
+                                        : item
+                                    )
+                                  );
+                                }
+                              });
+                          }
+                        });
+                    }}
+                  >
+                    {user.restricted_until ? "Restricted" : "Active"}
+                  </Button>
+                </Tooltip>
+              ),
+            },
+          ]}
+        />
       </Container>
     </Stack>
   );

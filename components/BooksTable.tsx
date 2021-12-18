@@ -1,6 +1,7 @@
 import { FunctionComponent, memo, useCallback, useState } from "react";
 
 import {
+  Button,
   Paper,
   Table,
   TableBody,
@@ -11,14 +12,28 @@ import {
 } from "@mui/material";
 import { BookFormModal } from "@components";
 import { BookModel } from "@models";
+import { useUser } from "@hooks";
 
-const BooksTableFC: FunctionComponent<{ books: Array<BookModel> }> = ({
+const BooksTableFC: FunctionComponent<{
+  books: Array<BookModel>;
+  actions?: Array<any>;
+  changeBook?: (book: BookModel) => void;
+  deleteBook?: (book: BookModel) => void;
+}> = ({
   books,
+  actions,
+  changeBook,
+  deleteBook,
 }: {
   books: Array<BookModel>;
+  actions?: Array<any>;
+  changeBook?: (book: BookModel) => void;
+  deleteBook?: (book: BookModel) => void;
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openRow, setOpenRow] = useState(null);
+
+  const { userRole } = useUser();
 
   const handleRowClick = useCallback((row: any) => {
     setIsModalOpen(true);
@@ -42,6 +57,10 @@ const BooksTableFC: FunctionComponent<{ books: Array<BookModel> }> = ({
             <TableCell>author</TableCell>
             <TableCell>description</TableCell>
             <TableCell>copy_number</TableCell>
+            {actions &&
+              actions.map((action, index) => (
+                <TableCell key={index}>{action.name}</TableCell>
+              ))}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -49,7 +68,11 @@ const BooksTableFC: FunctionComponent<{ books: Array<BookModel> }> = ({
             <TableRow
               key={index}
               sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-              onClick={() => handleRowClick(book)}
+              onClick={() => {
+                if (userRole === "admin") {
+                  handleRowClick(book);
+                }
+              }}
             >
               <TableCell component="th" scope="row">
                 {book.id}
@@ -69,11 +92,17 @@ const BooksTableFC: FunctionComponent<{ books: Array<BookModel> }> = ({
                 {book.description}
               </TableCell>
               <TableCell>{book.copy_number}</TableCell>
+              {actions &&
+                actions.map((action, index) => (
+                  <TableCell key={index}>{action.value(book)}</TableCell>
+                ))}
               <BookFormModal
                 book={book}
                 onClose={clearOpenRow}
                 isOpen={isModalOpen && book.id === openRow}
                 isNew={false}
+                changeBook={changeBook}
+                deleteBook={deleteBook}
               />
             </TableRow>
           ))}
@@ -88,6 +117,9 @@ export const BooksTable = memo(
   (prevProps, nextProps) =>
     prevProps.books.length === nextProps.books.length &&
     prevProps.books.every(
-      (prevBook, index) => prevBook.id === nextProps.books[index].id
+      (prevBook, index) =>
+        !!prevBook &&
+        !!nextProps.books[index] &&
+        JSON.stringify(prevBook) === JSON.stringify(nextProps.books[index])
     )
 );

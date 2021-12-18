@@ -5,4 +5,5 @@ export interface UserModel {
   token: string;
   created_date: string;
   updated_date: string;
+  restricted_until: string | null;
 }

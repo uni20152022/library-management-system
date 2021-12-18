@@ -22,16 +22,18 @@ const Auth: NextPage = () => {
         })
         .then((res) => res.json())
         .then((response) => {
-          setUser({
-            username: login,
-            token: response["api-token"],
-            role: response["role"],
-          });
-          router.push(
-            response["role"] === "admin"
-              ? LOCAL_URL.admin.home
-              : LOCAL_URL.client.home
-          );
+          if (response.status) {
+            setUser({
+              username: login,
+              token: response["api-token"],
+              role: response["role"],
+            });
+            router.push(
+              response["role"] === "admin"
+                ? LOCAL_URL.admin.home
+                : LOCAL_URL.client.home
+            );
+          }
         })
         .catch((e) => console.log(e));
     },

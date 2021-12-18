@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -28,6 +28,36 @@ const Books: NextPage = () => {
   }, [user, loading, router]);
 
   const [books, setBooks] = useState<Array<BookModel>>([]);
+
+  const _alterBookById = useCallback((id: string) => {
+    requests
+      .get(`/books/all/${id}`)
+      .then((res) => res.json())
+      .then((response) => {
+        if (response.status) {
+          setBooks((prevState) =>
+            prevState.map((item) =>
+              item.id === id ? response.data.book : item
+            )
+          );
+        }
+      })
+      .catch((e) => console.log(e));
+  }, []);
+
+  const changeBookingStatus = useCallback(
+    (id: string) => {
+      _alterBookById(id);
+    },
+    [_alterBookById]
+  );
+
+  const changeWishlistStatus = useCallback(
+    (id: string) => {
+      _alterBookById(id);
+    },
+    [_alterBookById]
+  );
 
   useEffect(() => {
     requests
@@ -70,7 +100,11 @@ const Books: NextPage = () => {
         <Grid container rowSpacing={3} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
           {books.map((item, index) => (
             <Grid item xs={3} key={index}>
-              <BookCard book={item} />
+              <BookCard
+                book={item}
+                changeBookingStatus={changeBookingStatus}
+                changeWishlistStatus={changeWishlistStatus}
+              />
             </Grid>
           ))}
         </Grid>

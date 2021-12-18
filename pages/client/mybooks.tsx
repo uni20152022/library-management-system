@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
+  Button,
   Container,
   IconButton,
   InputAdornment,
@@ -30,10 +31,12 @@ const MyBooks: NextPage = () => {
 
   useEffect(() => {
     requests
-      .get("/books/all")
+      .get("/booking-details")
       .then((res) => res.json())
       .then((response) => {
-        setBooks(response.data.books);
+        if (response.status) {
+          setBooks(response.booking);
+        }
       })
       .catch((e) => console.log(e));
   }, []);
@@ -66,7 +69,54 @@ const MyBooks: NextPage = () => {
           }}
           fullWidth
         />
-        <BooksTable books={books} />
+        <BooksTable
+          books={books}
+          actions={[
+            {
+              name: "status",
+              value: (book: BookModel) => (
+                <Button
+                  size="small"
+                  variant="text"
+                  color="warning"
+                  disableRipple
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  {book.booking_details_status}
+                </Button>
+              ),
+            },
+            {
+              name: "action",
+              value: (book: BookModel) => (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="success"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    requests
+                      .put(`/booking-details/return?id=${book.id}`, {})
+                      .then((res) => res.json())
+                      .then((response) => {
+                        if (response.status) {
+                          setBooks((prevState) =>
+                            prevState.filter((item) => item.id !== book.id)
+                          );
+                        }
+                      });
+                  }}
+                >
+                  {"Return"}
+                </Button>
+              ),
+            },
+          ]}
+        />
       </Container>
     </Stack>
   );

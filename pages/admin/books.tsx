@@ -1,5 +1,5 @@
 import type { NextPage } from "next";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
@@ -28,12 +28,33 @@ const Books: NextPage = () => {
 
   const [books, setBooks] = useState<Array<BookModel>>([]);
 
+  const addBook = useCallback(
+    (newBook: BookModel) => setBooks((prevState) => [...prevState, newBook]),
+    []
+  );
+  const changeBook = useCallback(
+    (book: BookModel) => {
+      setBooks((prevState) =>
+        prevState.map((item) => (item.id === book.id ? book : item))
+      );
+    },
+    [setBooks]
+  );
+  const deleteBook = useCallback(
+    (book: BookModel) => {
+      setBooks((prevState) => prevState.filter((item) => item.id !== book.id));
+    },
+    [setBooks]
+  );
+
   useEffect(() => {
     requests
       .get("/books/all")
       .then((res) => res.json())
       .then((response) => {
-        setBooks(response.data.books);
+        if (response.status) {
+          setBooks(response.data.books);
+        }
       })
       .catch((e) => console.log(e));
   }, []);
@@ -66,8 +87,12 @@ const Books: NextPage = () => {
           }}
           fullWidth
         />
-        <AddNewBook />
-        <BooksTable books={books} />
+        <AddNewBook addBook={addBook} />
+        <BooksTable
+          books={books}
+          changeBook={changeBook}
+          deleteBook={deleteBook}
+        />
       </Container>
     </Stack>
   );

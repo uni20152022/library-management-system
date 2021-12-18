@@ -12,10 +12,15 @@ import {
 import { UserFormModal } from "@components";
 import { UserModel } from "@models";
 
-const UsersTableFC: FunctionComponent<{ users: Array<UserModel> }> = ({
+const UsersTableFC: FunctionComponent<{
+  users: Array<UserModel>;
+  actions?: Array<any>;
+}> = ({
   users,
+  actions,
 }: {
   users: Array<UserModel>;
+  actions?: Array<any>;
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [openRow, setOpenRow] = useState(null);
@@ -39,6 +44,10 @@ const UsersTableFC: FunctionComponent<{ users: Array<UserModel> }> = ({
             <TableCell>login</TableCell>
             <TableCell>created_date</TableCell>
             <TableCell>updated_date</TableCell>
+            {actions &&
+              actions.map((action, index) => (
+                <TableCell key={index}>{action.name}</TableCell>
+              ))}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -54,6 +63,10 @@ const UsersTableFC: FunctionComponent<{ users: Array<UserModel> }> = ({
               <TableCell>{user.login}</TableCell>
               <TableCell>{user.created_date}</TableCell>
               <TableCell>{user.updated_date}</TableCell>
+              {actions &&
+                actions.map((action, index) => (
+                  <TableCell key={index}>{action.value(user)}</TableCell>
+                ))}
               <UserFormModal
                 user={user}
                 onClose={clearOpenRow}
@@ -73,6 +86,9 @@ export const UsersTable = memo(
   (prevProps, nextProps) =>
     prevProps.users.length === nextProps.users.length &&
     prevProps.users.every(
-      (prevUser, index) => prevUser.id === nextProps.users[index].id
+      (prevUser, index) =>
+        !!prevUser &&
+        !!nextProps.users[index] &&
+        JSON.stringify(prevUser) === JSON.stringify(nextProps.users[index])
     )
 );

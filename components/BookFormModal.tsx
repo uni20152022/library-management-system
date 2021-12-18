@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { BookModel } from "@models";
+import { requests } from "@backend";
 
 const formControlLabels: Array<keyof BookModel> = [
   "title",
@@ -21,13 +22,17 @@ const formControlLabels: Array<keyof BookModel> = [
   "author",
   "description",
   "copy_number",
+  "download_url",
 ];
 
 interface BookFormModal {
-  book: BookModel;
+  book?: BookModel;
   onClose: () => void;
   isOpen: boolean;
   isNew: boolean;
+  addBook?: (book: BookModel) => void;
+  changeBook?: (book: BookModel) => void;
+  deleteBook?: (book: BookModel) => void;
 }
 
 const BookFormModalFC: FunctionComponent<BookFormModal> = ({
@@ -35,6 +40,9 @@ const BookFormModalFC: FunctionComponent<BookFormModal> = ({
   onClose,
   isOpen,
   isNew,
+  addBook,
+  changeBook,
+  deleteBook,
 }: BookFormModal) => {
   const [formInfo, setFormInfo] = useState(
     isNew
@@ -46,6 +54,7 @@ const BookFormModalFC: FunctionComponent<BookFormModal> = ({
           author: "",
           description: "",
           copy_number: "",
+          download_url: "",
         } as BookModel)
       : {
           ...book,
@@ -60,14 +69,48 @@ const BookFormModalFC: FunctionComponent<BookFormModal> = ({
   };
 
   const handleSubmit = useCallback(() => {
-    // TODO update or add this book
-    onClose();
-  }, [onClose]);
+    if (isNew) {
+      requests
+        .post("/books", {
+          ...formInfo,
+        })
+        .then((res) => res.json())
+        .then((response) => {
+          if (response.status) {
+            if (response.data && response.data.book) {
+              addBook && addBook(response.data.book);
+            }
+            onClose();
+          }
+        });
+    } else {
+      requests
+        .put(`/books/${book!.id}`, {
+          ...formInfo,
+        })
+        .then((res) => res.json())
+        .then((response) => {
+          if (response.status) {
+            if (response.data && response.data.book) {
+              changeBook && changeBook(response.data.book);
+            }
+            onClose();
+          }
+        });
+    }
+  }, [addBook, book, changeBook, formInfo, isNew, onClose]);
 
   const handleDelete = useCallback(() => {
-    // TODO delete this book
-    onClose();
-  }, [onClose]);
+    requests
+      .delete(`/books/${book ? book.id : formInfo.id}`)
+      .then((res) => res.json())
+      .then((response) => {
+        if (response.status) {
+          deleteBook && deleteBook(book ?? ({} as BookModel));
+        }
+        onClose();
+      });
+  }, [book, deleteBook, formInfo.id, onClose]);
 
   return (
     <Modal
@@ -155,8 +198,7 @@ const BookFormModalFC: FunctionComponent<BookFormModal> = ({
 export const BookFormModal = memo(
   BookFormModalFC,
   (prevProps, nextProps) =>
-    prevProps.book.id === nextProps.book.id &&
-    prevProps.onClose === nextProps.onClose &&
-    prevProps.isOpen === nextProps.isOpen &&
-    prevProps.isNew === nextProps.isNew
+    !!prevProps.book &&
+    !!nextProps.book &&
+    JSON.stringify(prevProps.book) === JSON.stringify(nextProps.book)
 );

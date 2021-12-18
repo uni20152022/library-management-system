@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 import {
+  Button,
   Container,
   IconButton,
   InputAdornment,
@@ -30,10 +31,10 @@ const Wishlist: NextPage = () => {
 
   useEffect(() => {
     requests
-      .get("/books/all")
+      .get("/wishlist")
       .then((res) => res.json())
       .then((response) => {
-        setBooks(response.data.books);
+        setBooks(response.data.wishlists);
       })
       .catch((e) => console.log(e));
   }, []);
@@ -66,7 +67,37 @@ const Wishlist: NextPage = () => {
           }}
           fullWidth
         />
-        <BooksTable books={books} />
+        <BooksTable
+          books={books}
+          actions={[
+            {
+              name: "action",
+              value: (book: BookModel) => (
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="error"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    requests
+                      .delete(`/wishlist?book_id=${book.id}`)
+                      .then((res) => res.json())
+                      .then((response) => {
+                        if (response.status) {
+                          setBooks((prevState) =>
+                            prevState.filter((item) => item.id !== book.id)
+                          );
+                        }
+                      });
+                  }}
+                >
+                  {"Remove from wishlist"}
+                </Button>
+              ),
+            },
+          ]}
+        />
       </Container>
     </Stack>
   );
